@@ -1,0 +1,18 @@
+@use "sass:color";
+.button{
+    border: none;
+    outline: none;
+    padding: 1.5rem 0.75rem;
+    border-radius: 1rem;
+    cursor: pointer;
+
+    &.primary-button{
+        background-color: #e1034d;
+        color: white;
+    }
+
+    &.active{
+        transform: scale(1.1);
+    }
+
+}
