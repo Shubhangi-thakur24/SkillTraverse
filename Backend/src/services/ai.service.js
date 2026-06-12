@@ -306,9 +306,9 @@ async function evaluateAnswer({ question, answer, resume, jobDescription }) {
     return JSON.parse(response.text);
 }
 
-async function generateCodingChallenges({ jobDescription }) {
+async function generateCodingChallenges({ jobDescription, language = "JavaScript" }) {
     const prompt = `Generate exactly 3 coding challenges tailored to the requirements, programming languages, and skills detailed in the following job description.
-                    The starter code should be in JavaScript.
+                    The starter code should be in ${language}.
                     Job Description: ${jobDescription}`;
 
     const response = await generateContentWithFallback({
@@ -323,13 +323,13 @@ async function generateCodingChallenges({ jobDescription }) {
     return JSON.parse(response.text).challenges;
 }
 
-async function evaluateCode({ title, description, starterCode, code }) {
+async function evaluateCode({ title, description, starterCode, code, language = "JavaScript" }) {
     const prompt = `Evaluate the candidate's solution for the following coding challenge:
                     Challenge Title: ${title}
                     Challenge Description: ${description}
-                    Starter Template: ${starterCode}
-                    Candidate's Solution Code:
-                    \`\`\`javascript
+                    Starter Template (in ${language}): ${starterCode}
+                    Candidate's Solution Code (in ${language}):
+                    \`\`\`${language.toLowerCase()}
                     ${code}
                     \`\`\`;`;
 

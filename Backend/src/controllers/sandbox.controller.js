@@ -8,18 +8,24 @@ const { generateCodingChallenges, evaluateCode } = require("../services/ai.servi
 async function getChallengesController(req, res) {
     try {
         const { interviewId } = req.params;
+        const language = req.query.language || "JavaScript";
 
         const report = await InterviewReport.findOne({ _id: interviewId, user: req.user.id });
         if (!report) {
             return res.status(404).json({ message: "Interview report not found." });
         }
 
-        let codingChallenge = await CodingChallenge.findOne({ interviewReport: interviewId, user: req.user.id });
+        let codingChallenge = await CodingChallenge.findOne({ 
+            interviewReport: interviewId, 
+            user: req.user.id,
+            language: language
+        });
 
         if (!codingChallenge) {
             // Generate exactly 3 coding challenges tailored to the JD
             const generatedChallenges = await generateCodingChallenges({
-                jobDescription: report.jobDescription
+                jobDescription: report.jobDescription,
+                language: language
             });
 
             const challengesList = generatedChallenges.map(c => ({
@@ -36,6 +42,7 @@ async function getChallengesController(req, res) {
             codingChallenge = await CodingChallenge.create({
                 user: req.user.id,
                 interviewReport: interviewId,
+                language: language,
                 challenges: challengesList
             });
         }
@@ -70,7 +77,8 @@ async function submitCodeController(req, res) {
             title: challenge.title,
             description: challenge.description,
             starterCode: challenge.starterCode,
-            code: code
+            code: code,
+            language: codingChallenge.language || "JavaScript"
         });
 
         // Save progress & evaluation findings

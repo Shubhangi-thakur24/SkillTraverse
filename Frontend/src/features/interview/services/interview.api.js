@@ -85,8 +85,10 @@ export const submitMockAnswer = async (interviewId, answer) => {
 /**
  * @description Service to get coding challenges.
  */
-export const getCodingChallenges = async (interviewId) => {
-    const response = await api.get(`/api/interview/report/${interviewId}/sandbox/challenges`);
+export const getCodingChallenges = async (interviewId, language = "JavaScript") => {
+    const response = await api.get(`/api/interview/report/${interviewId}/sandbox/challenges`, {
+        params: { language }
+    });
     return response.data;
 };
 

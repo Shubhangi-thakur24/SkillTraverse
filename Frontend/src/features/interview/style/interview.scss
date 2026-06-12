@@ -31,6 +31,9 @@ $severity-low: #3fb950;
     background-color: $bg-page;
     color: $text-primary;
     font-family: $font-stack;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.06) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%);
     display: flex;
     flex-direction: column;
     padding: 1.5rem;
@@ -76,8 +79,11 @@ $severity-low: #3fb950;
     margin: 0 auto;
     background-color: $bg-card;
     border: 1px solid $border-color;
-    border-radius: 1rem;
+    border-radius: 1.25rem;
     justify-content: space-between;
+    backdrop-filter: var(--backdrop-blur);
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
 }
 
 .interview-divider {
@@ -229,17 +235,17 @@ $severity-low: #3fb950;
     }
 
     &--prepared {
-        border-color: rgba($severity-low, 0.4);
-        background-color: rgba($severity-low, 0.02);
+        border-color: rgba($severity-low, 0.25);
+        background-color: rgba($severity-low, 0.01);
 
         &:hover {
-            border-color: rgba($severity-low, 0.6);
+            border-color: rgba($severity-low, 0.4);
         }
 
         .q-card__index {
-            background-color: rgba($severity-low, 0.15);
-            border-color: rgba($severity-low, 0.3);
-            color: $severity-low;
+            background-color: $severity-low;
+            border-color: $severity-low;
+            color: #fff;
         }
     }
 
@@ -254,14 +260,17 @@ $severity-low: #3fb950;
 
     &__index {
         flex-shrink: 0;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         font-weight: 700;
-        color: $accent;
-        background-color: rgba($accent, 0.1);
-        border: 1px solid rgba($accent, 0.2);
-        border-radius: 0.3rem;
-        padding: 0.15rem 0.4rem;
-        height: fit-content;
+        color: $text-muted;
+        background-color: $bg-input;
+        border: 1px solid $border-color;
+        width: 32px;
+        height: 32px;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     &__question-wrapper {

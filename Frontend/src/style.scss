@@ -1,39 +1,47 @@
 @use "sass:color";
 @use "./styles/button.scss";
-
-
-
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    --bg-page: #0d1117;
-    --bg-card: #161b22;
-    --bg-panel: #1c2230;
-    --bg-input: #1e2535;
-    --border-color: #2a3348;
-    --border-color-hover: #384460;
-    --text-primary: #e6edf3;
-    --text-primary-dim: #c9d1d9;
-    --text-muted: #7d8590;
-    --text-muted-bright: #9ea6b0;
-    --accent: #ff2d78;
-    --accent-dim: #e00057;
-    --accent-bright: #ff7ba8;
+    --bg-page: #0a0b10;
+    --bg-card: rgba(17, 18, 26, 0.75);
+    --bg-panel: rgba(25, 28, 41, 0.6);
+    --bg-input: #12141c;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-color-hover: rgba(255, 255, 255, 0.16);
+    --text-primary: #f8fafc;
+    --text-primary-dim: #cbd5e1;
+    --text-muted: #64748b;
+    --text-muted-bright: #94a3b8;
+    --accent: #4f46e5;
+    --accent-dim: #3730a3;
+    --accent-bright: #6366f1;
+    --accent-glow: rgba(79, 70, 229, 0.15);
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --backdrop-blur: blur(12px);
+    --accent-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #4f46e5 100%);
+    --accent-gradient-text: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
 }
 
 [data-theme="light"] {
-    --bg-page: #f6f8fa;
-    --bg-card: #ffffff;
-    --bg-panel: #f0f2f5;
-    --bg-input: #e1e4e8;
-    --border-color: #d1d5db;
-    --border-color-hover: #b0b7c0;
-    --text-primary: #1f2328;
-    --text-primary-dim: #0f1113;
-    --text-muted: #656d76;
-    --text-muted-bright: #838b95;
-    --accent: #d91b5c;
-    --accent-dim: #a81547;
-    --accent-bright: #e8558a;
+    --bg-page: #f3f5f9;
+    --bg-card: rgba(255, 255, 255, 0.85);
+    --bg-panel: rgba(241, 243, 247, 0.7);
+    --bg-input: #ffffff;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-color-hover: rgba(0, 0, 0, 0.16);
+    --text-primary: #0f172a;
+    --text-primary-dim: #334155;
+    --text-muted: #64748b;
+    --text-muted-bright: #475569;
+    --accent: #2563eb;
+    --accent-dim: #1d4ed8;
+    --accent-bright: #3b82f6;
+    --accent-glow: rgba(37, 99, 219, 0.1);
+    --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+    --backdrop-blur: blur(12px);
+    --accent-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    --accent-gradient-text: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
 }
 
 *{
@@ -48,7 +56,7 @@ body,
     width: 100%;
     background-color: var(--bg-page);
     color : var(--text-primary);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont,'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, Roboto, Helvetica, Arial;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 

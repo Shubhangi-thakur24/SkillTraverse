@@ -37,6 +37,10 @@ const CodingChallengeSchema = new mongoose.Schema({
         ref: "InterviewReport",
         required: true
     },
+    language: {
+        type: String,
+        default: "JavaScript"
+    },
     challenges: [challengeSchema]
 }, {
     timestamps: true

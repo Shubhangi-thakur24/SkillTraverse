@@ -134,11 +134,11 @@ export const useInterview = () => {
         return response
     }
 
-    const fetchChallenges = async (id) => {
+    const fetchChallenges = async (id, language = "JavaScript") => {
         setLoading(true)
         let response = null
         try {
-            response = await getCodingChallenges(id)
+            response = await getCodingChallenges(id, language)
             setCodingSession(response.codingChallenge)
         } catch (error) {
             console.log("Error fetching coding challenges:", error)
