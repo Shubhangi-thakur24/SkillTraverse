@@ -39,6 +39,7 @@ const Home = () => {
     const [ selectedFile, setSelectedFile ] = useState(null)
     const [ showProfileMenu, setShowProfileMenu] = useState(false)
     const [ theme, setTheme ] = useState(() => localStorage.getItem("theme") || "dark")
+    const [ generating, setGenerating ] = useState(false)
     const resumeInputRef = useRef()
     const navigate = useNavigate()
 
@@ -69,19 +70,27 @@ const Home = () => {
             return
         }
 
-        const data = await generateReport({ 
-            jobDescription, 
-            selfDescription, 
-            resumeFile: selectedFile 
-        })
-        if (data && data._id) {
-            navigate(`/interview/${data._id}`)
-        } else {
+        setGenerating(true)
+        try {
+            const data = await generateReport({ 
+                jobDescription, 
+                selfDescription, 
+                resumeFile: selectedFile 
+            })
+            if (data && data._id) {
+                navigate(`/interview/${data._id}`)
+            } else {
+                alert("Failed to generate report. Please try again.")
+            }
+        } catch (err) {
+            console.error(err)
             alert("Failed to generate report. Please try again.")
+        } finally {
+            setGenerating(false)
         }
     }
 
-    if (loading) {
+    if (generating || (loading && reports.length === 0)) {
         return <PremiumLoading />
     }
 

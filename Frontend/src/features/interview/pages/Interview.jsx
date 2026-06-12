@@ -704,7 +704,7 @@ const Interview = () => {
         }
     }, [ interviewId ])
 
-    if (loading || !report) {
+    if ((loading && !report) || !report) {
         return (
             <main className='premium-loading'>
                 <div className='loading-card'>
