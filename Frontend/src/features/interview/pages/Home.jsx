@@ -1,42 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
 import "../style/home.scss"
 import { useInterview } from '../hooks/useInterview.js'
+import { useAuth } from '../../auth/hooks/useAuth.js'
 import { useNavigate } from 'react-router'
 
-// Premium loading screen with interactive tip carousel and visual progress
+// Premium loading screen with only visual radar spinner (no text)
 const PremiumLoading = () => {
-    const [tipIndex, setTipIndex] = useState(0)
-    const [progress, setProgress] = useState(0)
-    
-    const tips = [
-        "Analyzing job requirements & core competencies...",
-        "Scanning candidate profile & parsing skills...",
-        "Calculating candidate-job alignment score...",
-        "Identifying critical skill gaps & growth areas...",
-        "Formulating high-impact technical questions...",
-        "Generating behavioral questions & model answers...",
-        "Structuring a 7-day preparation roadmap...",
-        "Polishing your custom interview dashboard..."
-    ]
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTipIndex((prev) => (prev + 1) % tips.length)
-        }, 3000)
-        return () => clearInterval(interval)
-    }, [tips.length])
-
-    useEffect(() => {
-        const progressInterval = setInterval(() => {
-            setProgress((prev) => {
-                if (prev >= 98) return prev
-                const increment = prev < 30 ? 3 : prev < 60 ? 1.5 : prev < 85 ? 0.8 : 0.2
-                return Math.min(prev + increment, 98)
-            })
-        }, 150)
-        return () => clearInterval(progressInterval)
-    }, [])
-
     return (
         <main className='premium-loading'>
             <div className='loading-card'>
@@ -45,7 +14,7 @@ const PremiumLoading = () => {
                     <div className='radar-loader__circle radar-loader__circle--2' />
                     <div className='radar-loader__circle radar-loader__circle--3' />
                     <span className='radar-loader__icon'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M12 2v2" />
                             <path d="M12 20v2" />
                             <path d="M4.93 4.93l1.41 1.41" />
@@ -57,12 +26,6 @@ const PremiumLoading = () => {
                         </svg>
                     </span>
                 </div>
-                <h2>Generating Your Custom Strategy</h2>
-                <p className='loading-status'>{tips[tipIndex]}</p>
-                <div className='progress-bar-container'>
-                    <div className='progress-bar-fill' style={{ width: `${progress}%` }} />
-                </div>
-                <span className='progress-percent'>{Math.floor(progress)}%</span>
             </div>
         </main>
     )
@@ -70,11 +33,23 @@ const PremiumLoading = () => {
 
 const Home = () => {
     const { loading, generateReport, reports = [] } = useInterview()
+    const { user, handleLogout } = useAuth()
     const [ jobDescription, setJobDescription ] = useState("")
     const [ selfDescription, setSelfDescription ] = useState("")
     const [ selectedFile, setSelectedFile ] = useState(null)
+    const [ showProfileMenu, setShowProfileMenu] = useState(false)
+    const [ theme, setTheme ] = useState(() => localStorage.getItem("theme") || "dark")
     const resumeInputRef = useRef()
     const navigate = useNavigate()
+
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme)
+        localStorage.setItem("theme", theme)
+    }, [ theme ])
+
+    const toggleTheme = () => {
+        setTheme(t => t === "dark" ? "light" : "dark")
+    }
 
     const handleFileChange = (e) => {
         const file = e.target.files[0]
@@ -112,6 +87,44 @@ const Home = () => {
 
     return (
         <div className='home-page'>
+            {/* Top Navigation Bar */}
+            <div className="home-top-bar">
+                <div className="app-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11" /></svg>
+                    <span>SkillTraverse</span>
+                </div>
+                <div className="top-bar-actions">
+                    <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
+                        {theme === 'dark' ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                        )}
+                    </button>
+
+                    {user && (
+                        <div className="profile-menu-container">
+                            <button className="avatar-btn" onClick={() => setShowProfileMenu(!showProfileMenu)}>
+                                {user.username ? user.username[0].toUpperCase() : 'U'}
+                            </button>
+                            {showProfileMenu && (
+                                <div className="profile-dropdown">
+                                    <div className="user-details">
+                                        <p className="user-name">{user.username}</p>
+                                        <p className="user-email">{user.email}</p>
+                                    </div>
+                                    <div className="dropdown-divider" />
+                                    <button className="logout-btn" onClick={handleLogout}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                                        Sign Out
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+
             {/* Page Header */}
             <header className='page-header'>
                 <h1>Create Your Custom <span className='highlight'>Interview Plan</span></h1>
@@ -245,21 +258,56 @@ const Home = () => {
                 </div>
             </div>
 
-            {/* Recent Reports List */}
-            {reports && reports.length > 0 && (
+            {/* Dashboard Sub-content Grid */}
+            <div className="home-dashboard-sub">
+                {/* Recent Reports List */}
                 <section className='recent-reports'>
                     <h2>My Recent Interview Plans</h2>
-                    <ul className='reports-list'>
-                        {reports.map(report => (
-                            <li key={report._id} className='report-item' onClick={() => navigate(`/interview/${report._id}`)}>
-                                <h3>{report.title || 'Untitled Position'}</h3>
-                                <p className='report-meta'>Generated on {new Date(report.createdAt).toLocaleDateString()}</p>
-                                <p className={`match-score ${report.matchScore >= 80 ? 'score--high' : report.matchScore >= 60 ? 'score--mid' : 'score--low'}`}>Match Score: {report.matchScore}%</p>
-                            </li>
-                        ))}
-                    </ul>
+                    {reports && reports.length > 0 ? (
+                        <ul className='reports-list'>
+                            {reports.map(report => (
+                                <li key={report._id} className='report-item' onClick={() => navigate(`/interview/${report._id}`)}>
+                                    <h3>{report.title || 'Untitled Position'}</h3>
+                                    <p className='report-meta'>Generated on {new Date(report.createdAt).toLocaleDateString()}</p>
+                                    <p className={`match-score ${report.matchScore >= 80 ? 'score--high' : report.matchScore >= 60 ? 'score--mid' : 'score--low'}`}>Match Score: {report.matchScore}%</p>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <div className="no-reports-card">
+                            <p>No interview plans generated yet. Paste a job description and submit to begin!</p>
+                        </div>
+                    )}
                 </section>
-            )}
+
+                {/* Profile Card */}
+                {user && (
+                    <section className="user-profile-section">
+                        <h2>My Account Profile</h2>
+                        <div className="profile-details-card">
+                            <div className="profile-header-block">
+                                <div className="profile-avatar-large">
+                                    {user.username ? user.username[0].toUpperCase() : 'U'}
+                                </div>
+                                <div className="profile-identity">
+                                    <h3>{user.username}</h3>
+                                    <p>{user.email}</p>
+                                </div>
+                            </div>
+                            <div className="profile-body-block">
+                                <div className="profile-stat-row">
+                                    <span>Plan Reports:</span>
+                                    <strong>{reports.length} generated</strong>
+                                </div>
+                                <div className="profile-stat-row">
+                                    <span>Account Status:</span>
+                                    <span className="status-badge">Active Member</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                )}
+            </div>
 
             {/* Page Footer */}
             <footer className='page-footer'>

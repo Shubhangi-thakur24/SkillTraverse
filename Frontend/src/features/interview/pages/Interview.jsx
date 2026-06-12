@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import '../style/interview.scss'
 import { useInterview } from '../hooks/useInterview.js'
+import { useAuth } from '../../auth/hooks/useAuth.js'
 import { useNavigate, useParams } from 'react-router'
 
 const NAV_ITEMS = [
@@ -549,8 +550,20 @@ const Interview = () => {
     const [ activeNav, setActiveNav ] = useState('technical')
     const useInterviewHook = useInterview()
     const { report, getReportById, loading, getResumePdf } = useInterviewHook
+    const { user, handleLogout } = useAuth()
+    const [ showProfileMenu, setShowProfileMenu ] = useState(false)
+    const [ theme, setTheme ] = useState(() => localStorage.getItem("theme") || "dark")
     const { interviewId } = useParams()
     const navigate = useNavigate()
+
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme)
+        localStorage.setItem("theme", theme)
+    }, [ theme ])
+
+    const toggleTheme = () => {
+        setTheme(t => t === "dark" ? "light" : "dark")
+    }
 
     useEffect(() => {
         if (interviewId) {
@@ -560,8 +573,26 @@ const Interview = () => {
 
     if (loading || !report) {
         return (
-            <main className='loading-screen'>
-                <h1>Loading your interview plan...</h1>
+            <main className='premium-loading'>
+                <div className='loading-card'>
+                    <div className='radar-loader'>
+                        <div className='radar-loader__circle radar-loader__circle--1' />
+                        <div className='radar-loader__circle radar-loader__circle--2' />
+                        <div className='radar-loader__circle radar-loader__circle--3' />
+                        <span className='radar-loader__icon'>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2v2" />
+                                <path d="M12 20v2" />
+                                <path d="M4.93 4.93l1.41 1.41" />
+                                <path d="M17.66 17.66l1.41 1.41" />
+                                <path d="M2 12h2" />
+                                <path d="M20 12h2" />
+                                <path d="M6.34 17.66l-1.41 1.41" />
+                                <path d="M19.07 4.93l-1.41 1.41" />
+                            </svg>
+                        </span>
+                    </div>
+                </div>
             </main>
         )
     }
@@ -577,14 +608,48 @@ const Interview = () => {
 
     return (
         <div className='interview-page'>
-            <div className='back-to-home-container'>
-                <button className='back-home-btn' onClick={() => navigate('/')}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12" />
-                        <polyline points="12 19 5 12 12 5" />
-                    </svg>
-                    Back to Dashboard
-                </button>
+            {/* Top Navigation Bar */}
+            <div className="home-top-bar">
+                <div className="back-to-home-container">
+                    <button className='back-home-btn' onClick={() => navigate('/')}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12" />
+                            <polyline points="12 19 5 12 12 5" />
+                        </svg>
+                        Back to Dashboard
+                    </button>
+                </div>
+                
+                <div className="top-bar-actions">
+                    <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
+                        {theme === 'dark' ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                        )}
+                    </button>
+
+                    {user && (
+                        <div className="profile-menu-container">
+                            <button className="avatar-btn" onClick={() => setShowProfileMenu(!showProfileMenu)}>
+                                {user.username ? user.username[0].toUpperCase() : 'U'}
+                            </button>
+                            {showProfileMenu && (
+                                <div className="profile-dropdown">
+                                    <div className="user-details">
+                                        <p className="user-name">{user.username}</p>
+                                        <p className="user-email">{user.email}</p>
+                                    </div>
+                                    <div className="dropdown-divider" />
+                                    <button className="logout-btn" onClick={handleLogout}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                                        Sign Out
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
             
             <div className='interview-layout'>
