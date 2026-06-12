@@ -7,6 +7,8 @@ const NAV_ITEMS = [
     { id: 'technical', label: 'Technical Questions', icon: (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>) },
     { id: 'behavioral', label: 'Behavioral Questions', icon: (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>) },
     { id: 'roadmap', label: 'Road Map', icon: (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11" /></svg>) },
+    { id: 'mock', label: 'Mock Interview', icon: (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" x2="12" y1="19" y2="22"/></svg>) },
+    { id: 'sandbox', label: 'Coding Sandbox', icon: (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 17l6-6-6-6M12 19h8"/></svg>) },
 ]
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -102,10 +104,451 @@ const RoadMapDay = ({ day }) => {
     )
 }
 
+const MockInterview = ({ interviewId, useInterviewHook }) => {
+    const { 
+        loading, 
+        mockSession, 
+        startMock, 
+        fetchMock, 
+        submitAnswer 
+    } = useInterviewHook;
+
+    const [answerText, setAnswerText] = useState("");
+    const [isListening, setIsListening] = useState(false);
+    const [recognition, setRecognition] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [selectedQuestionIdx, setSelectedQuestionIdx] = useState(null);
+
+    useEffect(() => {
+        fetchMock(interviewId);
+    }, [interviewId]);
+
+    useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const rec = new SpeechRecognition();
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = 'en-US';
+
+            rec.onresult = (event) => {
+                let text = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    text += event.results[i][0].transcript;
+                }
+                setAnswerText(prev => prev + " " + text);
+            };
+
+            rec.onerror = (e) => {
+                console.error("Speech recognition error:", e);
+                setIsListening(false);
+            };
+
+            rec.onend = () => {
+                setIsListening(false);
+            };
+
+            setRecognition(rec);
+        }
+    }, []);
+
+    const toggleListening = () => {
+        if (!recognition) {
+            alert("Speech recognition is not supported in this browser. Please type your answer.");
+            return;
+        }
+        if (isListening) {
+            recognition.stop();
+            setIsListening(false);
+        } else {
+            recognition.start();
+            setIsListening(true);
+        }
+    };
+
+    const handleStartMock = async () => {
+        await startMock(interviewId);
+        setAnswerText("");
+    };
+
+    const handleSubmitAnswer = async () => {
+        if (!answerText.trim()) {
+            alert("Please provide an answer before submitting.");
+            return;
+        }
+        if (isListening) {
+            recognition.stop();
+            setIsListening(false);
+        }
+        setSubmitting(true);
+        try {
+            await submitAnswer(interviewId, answerText.trim());
+            setAnswerText("");
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading && !mockSession) {
+        return (
+            <div className="mock-container">
+                <div className="mock-loading">Loading mock interview room...</div>
+            </div>
+        );
+    }
+
+    if (!mockSession) {
+        return (
+            <div className="mock-start-screen">
+                <div className="mock-card">
+                    <div className="mock-icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                    </div>
+                    <h3>Start Mock Interview Room</h3>
+                    <p>Simulate a real technical/behavioral interview. Gemini AI will ask you exactly 5 questions tailored to your target job profile, record your answers, and provide detailed score reviews and recommendations.</p>
+                    <button className="button primary-button" onClick={handleStartMock}>
+                        Generate & Start Session
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const { questions, currentQuestionIndex, status } = mockSession;
+
+    if (status === "completed") {
+        const scores = questions.map(q => q.feedback ? q.feedback.score : 0);
+        const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+
+        return (
+            <div className="mock-completed-screen">
+                <div className="mock-completed-header">
+                    <div className="score-badge-circle">
+                        <span className="score-val">{avgScore}</span>
+                        <span className="score-max">/100</span>
+                    </div>
+                    <div className="completed-info">
+                        <h2>Mock Interview Completed!</h2>
+                        <p>Below is a question-by-question breakdown of your answers, strengths, and suggested areas of improvement.</p>
+                    </div>
+                    <button className="button secondary-button retake-btn" onClick={handleStartMock}>
+                        Retake Interview
+                    </button>
+                </div>
+
+                <div className="mock-review-list">
+                    {questions.map((q, idx) => (
+                        <div key={idx} className={`q-review-card ${selectedQuestionIdx === idx ? 'q-review-card--open' : ''}`}>
+                            <div className="q-review-header" onClick={() => setSelectedQuestionIdx(selectedQuestionIdx === idx ? null : idx)}>
+                                <span className={`category-tag category-tag--${q.category}`}>{q.category}</span>
+                                <p className="q-review-question">{q.question}</p>
+                                <div className="q-review-header-right">
+                                    <span className="q-review-score">{q.feedback ? q.feedback.score : 0}/100</span>
+                                    <span className={`chevron ${selectedQuestionIdx === idx ? 'chevron--open' : ''}`}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                                    </span>
+                                </div>
+                            </div>
+
+                            {selectedQuestionIdx === idx && (
+                                <div className="q-review-body">
+                                    <div className="q-review-section">
+                                        <h4>Your Answer:</h4>
+                                        <p className="user-answer-text">{q.userAnswer || "No answer provided."}</p>
+                                    </div>
+                                    <div className="q-review-row">
+                                        <div className="q-review-col green-border">
+                                            <h4>Strengths:</h4>
+                                            <p>{q.feedback?.strengths || "N/A"}</p>
+                                        </div>
+                                        <div className="q-review-col orange-border">
+                                            <h4>Areas for Improvement:</h4>
+                                            <p>{q.feedback?.improvements || "N/A"}</p>
+                                        </div>
+                                    </div>
+                                    <div className="q-review-section model-ans">
+                                        <h4>Model Answer:</h4>
+                                        <p>{q.feedback?.modelAnswer || "N/A"}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    const currentQuestion = questions[currentQuestionIndex];
+
+    return (
+        <div className="mock-session-active">
+            <div className="mock-session-progress">
+                <span className="progress-text">Question {currentQuestionIndex + 1} of {questions.length}</span>
+                <div className="progress-bar-container">
+                    <div className="progress-bar-fill" style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}></div>
+                </div>
+            </div>
+
+            <div className="mock-question-panel">
+                <div className="bot-avatar">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                </div>
+                <div className="mock-question-bubble">
+                    <span className="question-cat">{currentQuestion.category} Question</span>
+                    <p className="question-text">{currentQuestion.question}</p>
+                </div>
+            </div>
+
+            <div className="mock-input-panel">
+                <textarea 
+                    className="mock-textarea"
+                    placeholder="Type or dictate your answer here..."
+                    value={answerText}
+                    onChange={(e) => setAnswerText(e.target.value)}
+                    disabled={submitting}
+                />
+
+                <div className="mock-actions">
+                    <button 
+                        type="button" 
+                        className={`listening-btn ${isListening ? 'listening-btn--active' : ''}`}
+                        onClick={toggleListening}
+                        disabled={submitting}
+                        title={isListening ? "Stop listening" : "Start voice dictation"}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                        {isListening ? "Listening..." : "Dictate Answer"}
+                    </button>
+
+                    <button 
+                        className="button primary-button submit-ans-btn"
+                        onClick={handleSubmitAnswer}
+                        disabled={submitting || !answerText.trim()}
+                    >
+                        {submitting ? (
+                            <>
+                                <span className="spinner"></span>
+                                Evaluating response...
+                            </>
+                        ) : "Submit Answer"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CodingSandbox = ({ interviewId, useInterviewHook }) => {
+    const { 
+        loading, 
+        codingSession, 
+        fetchChallenges, 
+        submitCode 
+    } = useInterviewHook;
+
+    const [selectedChallengeIdx, setSelectedChallengeIdx] = useState(0);
+    const [userCode, setUserCode] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        fetchChallenges(interviewId);
+    }, [interviewId]);
+
+    useEffect(() => {
+        if (codingSession && codingSession.challenges) {
+            const ch = codingSession.challenges[selectedChallengeIdx];
+            if (ch) {
+                setUserCode(ch.userCode || ch.starterCode || "");
+            }
+        }
+    }, [codingSession, selectedChallengeIdx]);
+
+    const handleSelectChallenge = (idx) => {
+        setSelectedChallengeIdx(idx);
+    };
+
+    const handleResetCode = () => {
+        if (codingSession && codingSession.challenges) {
+            const ch = codingSession.challenges[selectedChallengeIdx];
+            if (ch && window.confirm("Reset editor to default template? Your changes will be lost.")) {
+                setUserCode(ch.starterCode || "");
+            }
+        }
+    };
+
+    const handleSubmitCode = async () => {
+        if (!userCode.trim()) {
+            alert("Editor is empty. Write your solution before submitting.");
+            return;
+        }
+        setSubmitting(true);
+        try {
+            const ch = codingSession.challenges[selectedChallengeIdx];
+            await submitCode(interviewId, ch._id, userCode.trim());
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading && !codingSession) {
+        return (
+            <div className="sandbox-container">
+                <div className="sandbox-loading">Loading coding challenges...</div>
+            </div>
+        );
+    }
+
+    if (!codingSession || !codingSession.challenges || codingSession.challenges.length === 0) {
+        return (
+            <div className="sandbox-container">
+                <div className="sandbox-loading">Loading sandbox...</div>
+            </div>
+        );
+    }
+
+    const currentChallenge = codingSession.challenges[selectedChallengeIdx];
+    const evaluation = currentChallenge.evaluation;
+
+    return (
+        <div className="sandbox-workspace">
+            <div className="sandbox-instructions-panel">
+                <div className="challenges-tabs">
+                    {codingSession.challenges.map((c, i) => (
+                        <button 
+                            key={i}
+                            className={`challenge-tab-btn ${selectedChallengeIdx === i ? 'challenge-tab-btn--active' : ''}`}
+                            onClick={() => handleSelectChallenge(i)}
+                        >
+                            Challenge {i + 1}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="challenge-detail">
+                    <div className="challenge-detail-header">
+                        <h3>{currentChallenge.title}</h3>
+                        <span className={`difficulty-badge difficulty-badge--${currentChallenge.difficulty.toLowerCase()}`}>
+                            {currentChallenge.difficulty}
+                        </span>
+                    </div>
+
+                    <p className="challenge-desc">{currentChallenge.description}</p>
+
+                    {currentChallenge.constraints && (
+                        <div className="challenge-section">
+                            <h4>Constraints:</h4>
+                            <p className="monospace-block">{currentChallenge.constraints}</p>
+                        </div>
+                    )}
+
+                    {currentChallenge.examples && currentChallenge.examples.length > 0 && (
+                        <div className="challenge-section">
+                            <h4>Examples:</h4>
+                            {currentChallenge.examples.map((ex, i) => (
+                                <div key={i} className="example-item">
+                                    <p><strong>Example {i + 1}:</strong></p>
+                                    <p className="monospace-block">
+                                        Input: {ex.input}<br />
+                                        Output: {ex.output}
+                                    </p>
+                                    {ex.explanation && (
+                                        <p className="example-expl">Explanation: {ex.explanation}</p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="sandbox-editor-panel">
+                <div className="editor-header">
+                    <span className="lang-label">JavaScript (Node)</span>
+                    <button className="reset-code-btn" onClick={handleResetCode} disabled={submitting}>
+                        Reset Starter Code
+                    </button>
+                </div>
+
+                <div className="editor-container">
+                    <textarea 
+                        className="code-textarea"
+                        value={userCode}
+                        onChange={(e) => setUserCode(e.target.value)}
+                        disabled={submitting}
+                    />
+                </div>
+
+                <div className="editor-actions">
+                    <button 
+                        className="button primary-button run-eval-btn"
+                        onClick={handleSubmitCode}
+                        disabled={submitting}
+                    >
+                        {submitting ? (
+                            <>
+                                <span className="spinner"></span>
+                                Analyzing solution...
+                            </>
+                        ) : "Submit Solution for Review"}
+                    </button>
+                </div>
+
+                <div className="sandbox-console">
+                    <div className="console-header">
+                        <span>Evaluation Review Console</span>
+                        {evaluation && (
+                            <span className="eval-score">Score: {evaluation.score}/100</span>
+                        )}
+                    </div>
+                    <div className="console-body">
+                        {evaluation ? (
+                            <div className="evaluation-report">
+                                <div className="eval-complexities">
+                                    <div className="complexity-tag blue-tag">
+                                        Time: {evaluation.timeComplexity}
+                                    </div>
+                                    <div className="complexity-tag purple-tag">
+                                        Space: {evaluation.spaceComplexity}
+                                    </div>
+                                </div>
+                                
+                                <div className="eval-section">
+                                    <h4>Analysis:</h4>
+                                    <p>{evaluation.analysis}</p>
+                                </div>
+
+                                <div className="eval-section">
+                                    <h4>Refactoring & Suggestions:</h4>
+                                    <p>{evaluation.suggestions}</p>
+                                </div>
+
+                                <div className="eval-section model-sol">
+                                    <h4>Optimal Solution:</h4>
+                                    <pre><code>{evaluation.modelSolution}</code></pre>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="console-empty">
+                                Write your code in the editor above and submit to see real-time logic analysis, time/space complexity, and code suggestions.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ── Main Component ────────────────────────────────────────────────────────────
 const Interview = () => {
     const [ activeNav, setActiveNav ] = useState('technical')
-    const { report, getReportById, loading, getResumePdf } = useInterview()
+    const useInterviewHook = useInterview()
+    const { report, getReportById, loading, getResumePdf } = useInterviewHook
     const { interviewId } = useParams()
     const navigate = useNavigate()
 
@@ -212,6 +655,26 @@ const Interview = () => {
                                     <RoadMapDay key={day.day} day={day} />
                                 ))}
                             </div>
+                        </section>
+                    )}
+
+                    {activeNav === 'mock' && (
+                        <section>
+                            <div className='content-header'>
+                                <h2>Mock Interview Room</h2>
+                                <span className='content-header__count'>Interactive AI Room</span>
+                            </div>
+                            <MockInterview interviewId={interviewId} useInterviewHook={useInterviewHook} />
+                        </section>
+                    )}
+
+                    {activeNav === 'sandbox' && (
+                        <section>
+                            <div className='content-header'>
+                                <h2>Coding Sandbox</h2>
+                                <span className='content-header__count'>AI Code Reviewer</span>
+                            </div>
+                            <CodingSandbox interviewId={interviewId} useInterviewHook={useInterviewHook} />
                         </section>
                     )}
                 </main>

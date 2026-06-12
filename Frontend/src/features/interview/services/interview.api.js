@@ -57,3 +57,43 @@ export const generateResumePdf = async ({ interviewReportId }) => {
 
     return response.data
 }
+
+/**
+ * @description Service to start a new mock interview session.
+ */
+export const startMockSession = async (interviewId) => {
+    const response = await api.post(`/api/interview/report/${interviewId}/mock/start`);
+    return response.data;
+};
+
+/**
+ * @description Service to get active mock session.
+ */
+export const getMockSession = async (interviewId) => {
+    const response = await api.get(`/api/interview/report/${interviewId}/mock/session`);
+    return response.data;
+};
+
+/**
+ * @description Service to submit a mock interview question answer.
+ */
+export const submitMockAnswer = async (interviewId, answer) => {
+    const response = await api.post(`/api/interview/report/${interviewId}/mock/submit`, { answer });
+    return response.data;
+};
+
+/**
+ * @description Service to get coding challenges.
+ */
+export const getCodingChallenges = async (interviewId) => {
+    const response = await api.get(`/api/interview/report/${interviewId}/sandbox/challenges`);
+    return response.data;
+};
+
+/**
+ * @description Service to submit and evaluate coding challenge code.
+ */
+export const submitCodingSolution = async (interviewId, challengeId, code) => {
+    const response = await api.post(`/api/interview/report/${interviewId}/sandbox/submit`, { challengeId, code });
+    return response.data;
+};
