@@ -1,5 +1,5 @@
 const CodingChallenge = require("../models/codingChallenge.model");
-const InterviewReport = require("../models/interviewReport.model");
+const InterviewReport = require("../models/InterviewReport.model");
 const { generateCodingChallenges, evaluateCode } = require("../services/ai.service");
 
 /**

@@ -1,5 +1,5 @@
 const MockSession = require("../models/mockSession.model");
-const InterviewReport = require("../models/interviewReport.model");
+const InterviewReport = require("../models/InterviewReport.model");
 const { generateMockQuestions, evaluateAnswer } = require("../services/ai.service");
 
 /**
