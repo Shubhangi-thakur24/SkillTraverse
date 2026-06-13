@@ -921,40 +921,8 @@ $severity-low: #3fb950;
 
         .mock-actions {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
-
-            .listening-btn {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                background-color: transparent;
-                border: 1px solid $border-color;
-                border-radius: 0.5rem;
-                padding: 0.65rem 1.2rem;
-                color: $text-muted;
-                font-size: 0.85rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-
-                &:hover {
-                    color: $text-primary;
-                    border-color: $text-muted;
-                }
-
-                &--active {
-                    color: #fff;
-                    background-color: $severity-high;
-                    border-color: $severity-high;
-                    animation: pulse 1.5s infinite;
-
-                    &:hover {
-                        background-color: color.adjust($severity-high, $lightness: -5%);
-                        border-color: color.adjust($severity-high, $lightness: -5%);
-                    }
-                }
-            }
 
             .submit-ans-btn {
                 padding: 0.65rem 1.75rem;
@@ -966,12 +934,6 @@ $severity-low: #3fb950;
             }
         }
     }
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba($severity-high, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba($severity-high, 0); }
-    100% { box-shadow: 0 0 0 0 rgba($severity-high, 0); }
 }
 
 .mock-completed-screen {
