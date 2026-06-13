@@ -9,7 +9,6 @@ require("dotenv").config({
 
 const app = require("./app");
 const connectDB = require("./src/config/database");
-const { invokeGeminiAi } = require("./src/services/ai.service");
 const {DOMMatrix} = require("@napi-rs/canvas")
 global.DOMMatrix = DOMMatrix;
 
@@ -17,7 +16,6 @@ const pdfParse = require("pdf-parse");
 (async () => {
   try {
     await connectDB();
-    await invokeGeminiAi();
 
     const PORT = process.env.PORT || 3000;
 

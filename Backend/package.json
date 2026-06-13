@@ -2,9 +2,10 @@
   "name": "project",
   "version": "1.0.0",
   "description": "",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "nodemon src/server.js",
+    "start": "node server.js",
+    "build": "npx puppeteer browsers install chrome",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx nodemon server.js"
   },
