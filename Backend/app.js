@@ -1,28 +1,37 @@
-const express = require("express")
-const cookieParser = require("cookie-parser")
-const app = express()
-const cors = require("cors")
-app.use(express.json())
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
-app.use(cookieParser())
+const app = express();
+
+app.use(express.json());
+app.use(cookieParser());
 
 const allowedOrigins = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    process.env.FRONTEND_URL
+  "http://localhost:5173",
+  "http://localhost:5174",
+  process.env.FRONTEND_URL
 ].filter(Boolean);
 
-app.use(cors(
-    {
-        origin: allowedOrigins,
-        credentials: true,
-    }
-))
-/*require all the routes here*/
-const authRouter = require("./src/routes/auth.routes")
-const interviewRouter = require("./src/routes/interview.routes")
-/*using all the routes here*/
-app.use("/api/auth", authRouter)
-app.use("/api/interview", interviewRouter)
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
-module.exports = app
+// Health Route
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "SkillTraverse Backend Running 🚀",
+  });
+});
+
+const authRouter = require("./src/routes/auth.routes");
+const interviewRouter = require("./src/routes/interview.routes");
+
+app.use("/api/auth", authRouter);
+app.use("/api/interview", interviewRouter);
+
+module.exports = app;
